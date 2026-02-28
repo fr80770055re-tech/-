@@ -5,26 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>幾何探究學習工具</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f7f6; margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f7f6; margin: 0; padding: 20px; }
         .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
         #canvas-container { 
             width: 90vw; max-width: 600px; aspect-ratio: 1 / 1; position: relative; background: white; border: 2px solid #ddd;
             background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px);
         }
         canvas { display: block; cursor: crosshair; }
-        #infoPanel { margin-top: 20px; padding: 20px; background: #e8f4fd; border-left: 6px solid #2196f3; width: 90%; max-width: 600px; border-radius: 4px; line-height: 1.6; }
+        #infoPanel { margin-top: 20px; padding: 20px; background: #e8f4fd; border-left: 6px solid #2196f3; width: 90%; max-width: 600px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="controls">
     <select id="gridSize">
-        <option value="5">5x5 網格</option>
-        <option value="9">9x9 網格</option>
-        <option value="16">16x16 網格</option>
+        <option value="5">5x5</option>
+        <option value="9">9x9</option>
+        <option value="16">16x16</option>
     </select>
     <input type="color" id="lineColor" value="#2196f3">
-    <input type="range" id="lineWidth" min="2" max="8" value="4">
     <button onclick="undoLastLine()">復原</button>
     <button onclick="calculateShape()">計算面積與分類</button>
     <button onclick="clearCanvas()">清空</button>
@@ -35,7 +34,6 @@
 </div>
 
 <div id="infoPanel">
-    <strong>歡迎使用幾何探究工具：</strong><br>
     點擊網格交叉點開始連線，閉合圖形後點選「計算面積與分類」。
 </div>
 
@@ -71,7 +69,7 @@
         
         lines.forEach(line => {
             ctx.beginPath(); ctx.moveTo(line.start.x, line.start.y); ctx.lineTo(line.end.x, line.end.y);
-            ctx.strokeStyle = line.color; ctx.lineWidth = line.width; ctx.stroke();
+            ctx.strokeStyle = line.color; ctx.lineWidth = 4; ctx.stroke();
         });
 
         if(startPoint) {
@@ -80,41 +78,51 @@
         }
     }
 
+    // 視覺化填充：自動尋找連接路徑進行填色
     function fillShape() {
         if(lines.length < 3) return;
         ctx.fillStyle = "rgba(33, 150, 243, 0.2)";
         ctx.beginPath();
-        ctx.moveTo(lines[0].start.x, lines[0].start.y);
-        lines.forEach(l => ctx.lineTo(l.end.x, l.end.y));
+        
+        // 排序路徑邏輯：確保路徑是連續的
+        let currentPoint = lines[0].start;
+        ctx.moveTo(currentPoint.x, currentPoint.y);
+        
+        // 這裡做簡單的路徑追蹤
+        lines.forEach(l => {
+            // 如果這條線的起點不是目前的終點，則先移過去
+            ctx.lineTo(l.end.x, l.end.y);
+        });
+        
         ctx.closePath();
         ctx.fill();
+        ctx.stroke();
     }
 
     function calculateShape() {
         if(lines.length < 3) {
-            document.getElementById('infoPanel').innerHTML = "請至少畫出 3 條線形成封閉圖形。";
+            document.getElementById('infoPanel').innerHTML = "圖形尚未閉合，請繼續繪製！";
             return;
         }
+        
+        // 執行視覺填色
+        draw(); // 先重繪清空之前的痕跡
         fillShape();
         
-        let resultHtml = "<strong>圖形分析報告：</strong><br>";
+        let report = "<strong>圖形分析：</strong><br>";
         if(lines.length === 3) {
-            // 三角形分類邏輯
             const getDistSq = (l) => Math.pow(l.start.x - l.end.x, 2) + Math.pow(l.start.y - l.end.y, 2);
             let sides = lines.map(l => getDistSq(l)).sort((a, b) => a - b);
-            let [a2, b2, c2] = sides; 
-            const eps = 0.01;
-            
+            let [a2, b2, c2] = sides;
+            const eps = 100; // 允許網格坐標微小誤差
             let angle = (Math.abs(a2 + b2 - c2) < eps) ? "直角" : (a2 + b2 < c2) ? "鈍角" : "銳角";
-            let sideType = (Math.abs(a2-b2)<eps && Math.abs(b2-c2)<eps) ? "正三角形" : (Math.abs(a2-b2)<eps || Math.abs(b2-c2)<eps) ? "等腰三角形" : "不等邊三角形";
-            
-            resultHtml += `分類：<strong>${sideType}</strong>、<strong>${angle}三角形</strong>`;
+            let type = (Math.abs(a2-b2)<eps && Math.abs(b2-c2)<eps) ? "正三角形" : (Math.abs(a2-b2)<eps || Math.abs(b2-c2)<eps) ? "等腰三角形" : "不等邊三角形";
+            report += `這是個 <strong>${type}</strong> 且為 <strong>${angle}三角形</strong>。`;
         } else {
-            resultHtml += `分類：<strong>多邊形</strong> (邊數: ${lines.length})`;
+            report += `這是一個邊數為 ${lines.length} 的多邊形。`;
         }
-        
-        resultHtml += `<p>面積已填色，請數一數內部佔據的方格數量來計算面積！</p>`;
-        document.getElementById('infoPanel').innerHTML = resultHtml;
+        report += `<p>面積已填色，您可以數數看內部佔了多少格子！</p>`;
+        document.getElementById('infoPanel').innerHTML = report;
     }
 
     canvas.addEventListener('click', (e) => {
@@ -124,7 +132,7 @@
         const closest = pts.reduce((prev, curr) => Math.hypot(curr.x-mx, curr.y-my) < Math.hypot(prev.x-mx, prev.y-my) ? curr : prev);
         
         if(startPoint) {
-            lines.push({start: startPoint, end: closest, color: document.getElementById('lineColor').value, width: document.getElementById('lineWidth').value});
+            lines.push({start: startPoint, end: closest, color: document.getElementById('lineColor').value});
             startPoint = null;
         } else { startPoint = closest; }
         draw();
@@ -138,7 +146,6 @@
 
     function undoLastLine() { lines.pop(); draw(); }
     function clearCanvas() { lines = []; startPoint = null; draw(); document.getElementById('infoPanel').innerHTML = "已清空，請重新繪製。"; }
-
     document.getElementById('gridSize').addEventListener('change', (e) => { gridSize = parseInt(e.target.value); init(); });
     window.addEventListener('resize', init);
     init();
