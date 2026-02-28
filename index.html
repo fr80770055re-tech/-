@@ -5,14 +5,14 @@
     <title>幾何探究學習工具</title>
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f7f6; padding: 20px; }
-        .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
         #canvas-container { 
             width: 90vw; max-width: 600px; aspect-ratio: 1 / 1; position: relative; 
             background: white; border: 2px solid #ccc;
             background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px);
         }
         canvas { display: block; cursor: crosshair; }
-        #infoPanel { margin-top: 20px; padding: 15px; background: #fff; border-left: 5px solid #666; width: 90%; max-width: 600px; }
+        #infoPanel { margin-top: 20px; padding: 20px; background: #e8f4fd; border-left: 6px solid #2196f3; width: 90%; max-width: 600px; }
     </style>
 </head>
 <body>
@@ -21,70 +21,93 @@
     <select id="gridSize">
         <option value="5">5x5</option><option value="9">9x9</option><option value="16">16x16</option>
     </select>
-    <button onclick="clearCanvas()">全部清除</button>
-    <span style="margin-left:10px; font-size:0.9em; color:#666;">(左鍵連線，右鍵標註點名)</span>
+    <button onclick="calculateShape()">計算面積與分類</button>
+    <button onclick="undoLastLine()">復原</button>
+    <button onclick="clearCanvas()">清空</button>
 </div>
 
 <div id="canvas-container">
     <canvas id="canvas"></canvas>
 </div>
 
-<div id="infoPanel">提示：左鍵點擊網格建立連線；在點上點擊右鍵可手動加上名稱。</div>
+<div id="infoPanel">提示：左鍵點擊網格開始繪圖；右鍵點選網格點標註名稱(A, B, C...)。</div>
 
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let gridSize = 5, lines = [], startPoint = null, labels = [];
+    let gridSize = 5, lines = [], startPoint = null, labels = [], mousePos = {x:0, y:0};
 
     function draw() {
         const cellSize = canvas.width / (gridSize - 1);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 畫網格點
+        // 1. 畫所有網格點
         for(let i=0; i<gridSize; i++) {
             for(let j=0; j<gridSize; j++) {
-                ctx.fillStyle = "#ccc";
-                ctx.beginPath(); ctx.arc(j*cellSize, i*cellSize, 3, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#bbb"; ctx.beginPath(); ctx.arc(j*cellSize, i*cellSize, 3, 0, Math.PI*2); ctx.fill();
             }
         }
-        // 畫線
+        // 2. 畫已連線
         lines.forEach(l => {
             ctx.strokeStyle = "#333"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(l.start.x, l.start.y); ctx.lineTo(l.end.x, l.end.y); ctx.stroke();
         });
-        // 畫標記
+        // 3. 預覽線 (Ghost Line)
+        if(startPoint) {
+            ctx.setLineDash([5,5]); ctx.strokeStyle = "red"; ctx.beginPath(); 
+            ctx.moveTo(startPoint.x, startPoint.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]);
+        }
+        // 4. 畫標記
         labels.forEach(lb => {
             ctx.fillStyle = "black"; ctx.font = "bold 18px Arial";
             ctx.fillText(lb.text, lb.x + 8, lb.y - 8);
         });
     }
 
-    // 取得最近的格點
-    function getClosest(mx, my) {
-        const cellSize = canvas.width / (gridSize - 1);
-        return { x: Math.round(mx/cellSize)*cellSize, y: Math.round(my/cellSize)*cellSize };
+    function calculateShape() {
+        if(lines.length < 3) return;
+        // 視覺填色
+        ctx.fillStyle = "rgba(33, 150, 243, 0.2)";
+        ctx.beginPath(); ctx.moveTo(lines[0].start.x, lines[0].start.y);
+        lines.forEach(l => ctx.lineTo(l.end.x, l.end.y));
+        ctx.closePath(); ctx.fill();
+
+        // 簡單分類提示
+        const info = document.getElementById('infoPanel');
+        if(lines.length === 3) {
+            info.innerHTML = "<strong>分類結果：</strong> 三角形 (邊數: 3)。試著觀察三邊長是否相等或有直角！";
+        } else if(lines.length === 4) {
+            info.innerHTML = "<strong>分類結果：</strong> 四邊形 (邊數: 4)。";
+        } else {
+            info.innerHTML = "<strong>分類結果：</strong> 多邊形 (邊數: " + lines.length + ")。";
+        }
     }
 
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
-        const p = getClosest(e.clientX - rect.left, e.clientY - rect.top);
-        if(startPoint) {
-            lines.push({start: startPoint, end: p});
-            startPoint = null;
-        } else { startPoint = p; }
+        const cellSize = canvas.width / (gridSize - 1);
+        const p = { x: Math.round((e.clientX - rect.left)/cellSize)*cellSize, y: Math.round((e.clientY - rect.top)/cellSize)*cellSize };
+        if(startPoint) { lines.push({start: startPoint, end: p}); startPoint = null; } else { startPoint = p; }
         draw();
     });
 
-    // 右鍵標記點名
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mousePos = {x: e.clientX - rect.left, y: e.clientY - rect.top};
+        draw();
+    });
+
     canvas.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
-        const p = getClosest(e.clientX - rect.left, e.clientY - rect.top);
-        const name = prompt("請輸入點名 (例如 A):", "A");
+        const cellSize = canvas.width / (gridSize - 1);
+        const p = { x: Math.round((e.clientX - rect.left)/cellSize)*cellSize, y: Math.round((e.clientY - rect.top)/cellSize)*cellSize };
+        const name = prompt("輸入點名 (例如 A):", "A");
         if(name) labels.push({x: p.x, y: p.y, text: name});
         draw();
     });
 
+    function undoLastLine() { lines.pop(); draw(); }
     function clearCanvas() { lines = []; labels = []; startPoint = null; draw(); }
     document.getElementById('gridSize').addEventListener('change', (e) => { gridSize = parseInt(e.target.value); clearCanvas(); });
     window.onload = () => { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; draw(); };
