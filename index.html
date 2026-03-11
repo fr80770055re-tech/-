@@ -3,96 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幾何探究學習工具 - 完整版</title>
+    <title>幾何探究學習工具 - 旋轉與填色版</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f4f7f6; margin: 0; padding: 20px; 
-            display: flex; justify-content: center;
-        }
-        .main-container {
-            display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; width: 100%;
-        }
-        /* 左側畫布區 */
-        .canvas-section {
-            flex: 1 1 500px;
-        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .main-container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; width: 100%; }
+        .canvas-section { flex: 1 1 500px; }
         #canvas-container { 
-            width: 100%; aspect-ratio: 1 / 1; position: relative; 
-            background: white; border: 2px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            /* 面積輔助格線 */
-            background-image: linear-gradient(#ddd 1px, transparent 1px), linear-gradient(90deg, #ddd 1px, transparent 1px);
+            width: 100%; aspect-ratio: 1 / 1; position: relative; background: white; border: 2px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         canvas { display: block; cursor: crosshair; position: absolute; top: 0; left: 0; }
         
-        /* 右側控制與資訊區 */
-        .sidebar {
-            flex: 1 1 350px; display: flex; flex-direction: column; gap: 15px;
-        }
-        .controls { 
-            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            display: flex; flex-direction: column; gap: 12px;
-        }
+        .sidebar { flex: 1 1 350px; display: flex; flex-direction: column; gap: 15px; }
+        .controls { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px; }
         .control-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .control-row label { font-weight: bold; color: #444; font-size: 0.9em; }
-        button { 
-            padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; 
-            background: #e0e0e0; font-weight: bold; transition: 0.2s;
-        }
+        
+        /* 模式切換按鈕設計 */
+        .mode-toggle { display: flex; gap: 10px; background: #eee; padding: 5px; border-radius: 8px; }
+        .mode-btn { flex: 1; padding: 8px; text-align: center; border-radius: 6px; cursor: pointer; font-weight: bold; border: 2px solid transparent; transition: 0.2s; }
+        .mode-btn.active { background: white; border-color: #2196f3; color: #2196f3; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        button { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; background: #e0e0e0; font-weight: bold; }
         button:hover { background: #ccc; }
         button.primary { background: #2196f3; color: white; }
         button.primary:hover { background: #1976d2; }
+        button.action { background: #ff9800; color: white; }
         
-        #infoPanel { 
-            padding: 20px; background: #e8f4fd; border-left: 6px solid #2196f3; 
-            border-radius: 8px; flex-grow: 1; line-height: 1.6; font-size: 1.05em;
-        }
-        .instruction { font-size: 0.85em; color: #666; background: #f9f9f9; padding: 10px; border-radius: 6px; }
+        #infoPanel { padding: 20px; background: #e8f4fd; border-left: 6px solid #2196f3; border-radius: 8px; flex-grow: 1; line-height: 1.6; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
     <div class="canvas-section">
-        <div id="canvas-container">
-            <canvas id="canvas"></canvas>
-        </div>
+        <div id="canvas-container"><canvas id="canvas"></canvas></div>
     </div>
 
     <div class="sidebar">
         <div class="controls">
+            <div class="mode-toggle">
+                <div id="mode-draw" class="mode-btn active" onclick="setMode('draw')">🖊️ 畫線模式</div>
+                <div id="mode-fill" class="mode-btn" onclick="setMode('fill')">🪣 塗色模式</div>
+            </div>
+
             <div class="control-row">
                 <label>選擇網格：</label>
-                <select id="gridSize">
-                    <option value="5">5x5</option>
-                    <option value="9">9x9</option>
-                    <option value="16">16x16</option>
-                </select>
+                <select id="gridSize"><option value="5">5x5</option><option value="9">9x9</option><option value="16">16x16</option></select>
             </div>
             <div class="control-row">
-                <label>線條顏色：</label>
-                <input type="color" id="lineColor" value="#333333">
+                <label>工具顏色：</label>
+                <input type="color" id="toolColor" value="#333333">
             </div>
+            
             <div class="control-row">
-                <label>線條粗細：</label>
-                <input type="range" id="lineWidth" min="2" max="10" value="4">
-            </div>
-            <div class="control-row">
-                <button onclick="undoLastLine()">復原上一筆</button>
+                <button onclick="undoLastAction()">復原上一筆</button>
                 <button onclick="clearCanvas()">全部清空</button>
             </div>
-            <button class="primary" onclick="calculateShape()">計算面積與分類圖形</button>
             
-            <div class="instruction">
-                <strong>操作說明：</strong><br>
-                1. <strong>左鍵點擊：</strong>在網格點上拉出線條。<br>
-                2. <strong>右鍵點擊：</strong>手動標註點的名稱 (如 A, B, C)。
-            </div>
+            <button class="action" onclick="rotateCanvas90()">🔄 全圖順時針旋轉 90°</button>
+            <button class="primary" onclick="calculateShape()">📐 計算面積與分類圖形</button>
         </div>
 
         <div id="infoPanel">
-            <strong>分析結果將顯示於此。</strong><br>
-            請先在左方畫布完成一個封閉圖形！
+            <strong>操作說明：</strong><br>
+            1. <strong>畫線模式：</strong>左鍵點擊網格點拉出線條，右鍵標註點名。<br>
+            2. <strong>塗色模式：</strong>點擊網格內的空白處，可將該單位方格獨立填色。<br>
+            3. <strong>旋轉功能：</strong>點擊旋轉按鈕，觀察圖形在空間中的變化！
         </div>
     </div>
 </div>
@@ -101,158 +76,175 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('canvas-container');
-    let gridSize = 5, lines = [], startPoint = null, labels = [], mousePos = {x:0, y:0};
+    
+    let gridSize = 5, lines = [], filledCells = [], labels = [];
+    let startPoint = null, mousePos = {x:0, y:0};
+    let currentMode = 'draw'; // 'draw' 或 'fill'
+    let actionHistory = []; // 紀錄動作類型以支援復原
 
-    // 初始化與響應式調整
     function init() {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
+        canvas.width = container.clientWidth; canvas.height = container.clientHeight;
         const cellSize = canvas.width / (gridSize - 1);
+        
+        // 重繪背景輔助線
+        container.style.backgroundImage = `linear-gradient(#ddd 1px, transparent 1px), linear-gradient(90deg, #ddd 1px, transparent 1px)`;
         container.style.backgroundSize = `${cellSize}px ${cellSize}px`;
         draw();
     }
 
-    // 取得最近的格點 (磁吸功能)
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('mode-draw').classList.toggle('active', mode === 'draw');
+        document.getElementById('mode-fill').classList.toggle('active', mode === 'fill');
+        startPoint = null; // 切換模式時中斷畫線
+        draw();
+    }
+
     function getClosest(mx, my) {
         const cellSize = canvas.width / (gridSize - 1);
         return { x: Math.round(mx/cellSize)*cellSize, y: Math.round(my/cellSize)*cellSize };
     }
 
-    // 核心繪圖引擎
     function draw() {
         const cellSize = canvas.width / (gridSize - 1);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 1. 畫背景網格點
+        // 1. 繪製獨立填色的格子
+        filledCells.forEach(cell => {
+            ctx.fillStyle = cell.color;
+            ctx.globalAlpha = 0.5; // 半透明以免蓋住線條
+            ctx.fillRect(cell.c * cellSize, cell.r * cellSize, cellSize, cellSize);
+            ctx.globalAlpha = 1.0;
+        });
+
+        // 2. 畫背景網格點
+        ctx.fillStyle = "#aaa";
         for(let i=0; i<gridSize; i++) {
             for(let j=0; j<gridSize; j++) {
-                ctx.fillStyle = "#aaa"; 
                 ctx.beginPath(); ctx.arc(j*cellSize, i*cellSize, 4, 0, Math.PI*2); ctx.fill();
             }
         }
 
-        // 2. 畫已確定的線段
+        // 3. 畫已確定的線段
         lines.forEach(l => {
-            ctx.strokeStyle = l.color; ctx.lineWidth = l.width;
+            ctx.strokeStyle = l.color; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(l.start.x, l.start.y); ctx.lineTo(l.end.x, l.end.y); ctx.stroke();
         });
 
-        // 3. 畫滑鼠跟隨的預覽線 (Ghost Line)
-        if(startPoint) {
-            ctx.setLineDash([5,5]); ctx.strokeStyle = document.getElementById('lineColor').value; 
+        // 4. 畫線模式下的預覽線
+        if(currentMode === 'draw' && startPoint) {
+            ctx.setLineDash([5,5]); ctx.strokeStyle = document.getElementById('toolColor').value; 
             ctx.lineWidth = 2; ctx.beginPath(); 
             ctx.moveTo(startPoint.x, startPoint.y); ctx.lineTo(mousePos.x, mousePos.y); 
             ctx.stroke(); ctx.setLineDash([]);
         }
 
-        // 4. 畫手動標記的文字
+        // 5. 畫標記的文字
         labels.forEach(lb => {
             ctx.fillStyle = "black"; ctx.font = "bold 20px Arial";
             ctx.fillText(lb.text, lb.x + 8, lb.y - 8);
         });
     }
 
-    // 計算與分類功能
-    function calculateShape() {
-        if(lines.length < 3) {
-            document.getElementById('infoPanel').innerHTML = "請至少繪製 3 條線形成封閉圖形！";
-            return;
-        }
+    // 核心功能：旋轉 90 度 (繞中心點旋轉座標)
+    function rotateCanvas90() {
+        const center = canvas.width / 2;
+        const rotateObj = (p) => ({ x: center - (p.y - center), y: center + (p.x - center) });
 
-        // 執行視覺化填色
+        // 旋轉線條
+        lines.forEach(l => { l.start = rotateObj(l.start); l.end = rotateObj(l.end); });
+        // 旋轉標記
+        labels.forEach(lb => { const newP = rotateObj(lb); lb.x = newP.x; lb.y = newP.y; });
+        // 旋轉填色格 (需要計算旋轉後的欄列位置)
+        filledCells.forEach(c => {
+            const oldX = c.c * (canvas.width / (gridSize - 1));
+            const oldY = c.r * (canvas.width / (gridSize - 1));
+            // 將格子左上角轉為中心點計算旋轉
+            const cellCenter = { x: oldX + (canvas.width / (gridSize - 1))/2, y: oldY + (canvas.width / (gridSize - 1))/2 };
+            const rotatedCenter = rotateObj(cellCenter);
+            c.c = Math.floor(rotatedCenter.x / (canvas.width / (gridSize - 1)));
+            c.r = Math.floor(rotatedCenter.y / (canvas.width / (gridSize - 1)));
+        });
+        
+        actionHistory.push('rotate');
+        draw();
+    }
+
+    function calculateShape() {
+        if(lines.length < 3) return;
         ctx.fillStyle = "rgba(33, 150, 243, 0.25)";
         ctx.beginPath(); ctx.moveTo(lines[0].start.x, lines[0].start.y);
         lines.forEach(l => ctx.lineTo(l.end.x, l.end.y));
         ctx.closePath(); ctx.fill();
-
-        let report = "<strong>圖形分析報告：</strong><br><br>";
-
-        // 三角形精密分類演算法
-        if(lines.length === 3) {
-            const getDistSq = (p1, p2) => Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
-            let sides = lines.map(l => getDistSq(l.start, l.end)).sort((a, b) => a - b);
-            let [a2, b2, c2] = sides;
-            const eps = 10; // 允許微小網格計算誤差
-
-            let angle = (Math.abs(a2 + b2 - c2) < eps) ? "直角" : (a2 + b2 < c2) ? "鈍角" : "銳角";
-            let type = (Math.abs(a2-b2)<eps && Math.abs(b2-c2)<eps) ? "正" : (Math.abs(a2-b2)<eps || Math.abs(b2-c2)<eps) ? "等腰" : "不等邊";
-            
-            report += `🎯 <strong>圖形名稱：</strong> ${type}${angle}三角形<br>`;
-        } else if (lines.length === 4) {
-            report += `🎯 <strong>圖形名稱：</strong> 四邊形<br>`;
-        } else {
-            report += `🎯 <strong>圖形名稱：</strong> ${lines.length} 邊形<br>`;
-        }
-
-        // 面積與周長提示
-        report += `
-            <hr style="border:0; border-top:1px solid #ccc; margin:15px 0;">
-            📐 <strong>周長怎麼算？</strong><br>
-            將每一條邊的長度相加。<br><br>
-            🟦 <strong>面積怎麼看？</strong><br>
-            圖形內部已經塗上藍色，請試著「數格子」：<br>
-            完整的 1 格算 1，不完整的格子試著拼湊看看！
+        document.getElementById('infoPanel').innerHTML = `
+            <strong>圖形已分析！</strong><br>
+            您可以使用「塗色模式」來驗證面積是否等於您算出的格子數喔！
         `;
-
-        document.getElementById('infoPanel').innerHTML = report;
     }
 
-    // 事件監聽：滑鼠移動 (更新預覽線)
     canvas.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect();
         mousePos = {x: e.clientX - rect.left, y: e.clientY - rect.top};
-        draw();
+        if(currentMode === 'draw') draw();
     });
 
-    // 事件監聽：左鍵點擊 (畫線)
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
-        const p = getClosest(e.clientX - rect.left, e.clientY - rect.top);
-        
-        if(startPoint) {
-            lines.push({
-                start: startPoint, end: p, 
-                color: document.getElementById('lineColor').value, 
-                width: document.getElementById('lineWidth').value
-            });
-            startPoint = null;
-        } else { 
-            startPoint = p; 
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const color = document.getElementById('toolColor').value;
+        const cellSize = canvas.width / (gridSize - 1);
+
+        if (currentMode === 'draw') {
+            const p = getClosest(mx, my);
+            if(startPoint) {
+                lines.push({start: startPoint, end: p, color: color});
+                actionHistory.push('line');
+                startPoint = null;
+            } else { startPoint = p; }
+        } else if (currentMode === 'fill') {
+            // 計算點擊的是哪一格 (col, row)
+            const col = Math.floor(mx / cellSize);
+            const row = Math.floor(my / cellSize);
+            // 確保沒有點在網格邊界外
+            if (col < gridSize - 1 && row < gridSize - 1) {
+                // 檢查是否已塗色，若有則移除(當作橡皮擦)，否則加入
+                const existingIndex = filledCells.findIndex(c => c.c === col && c.r === row);
+                if (existingIndex > -1) {
+                    filledCells.splice(existingIndex, 1);
+                } else {
+                    filledCells.push({c: col, r: row, color: color});
+                    actionHistory.push('fill');
+                }
+            }
         }
         draw();
     });
 
-    // 事件監聽：右鍵點擊 (標註頂點)
     canvas.addEventListener('contextmenu', (e) => {
-        e.preventDefault(); // 阻止瀏覽器預設右鍵選單
+        e.preventDefault();
+        if(currentMode !== 'draw') return; // 只有畫線模式能標註
         const rect = canvas.getBoundingClientRect();
         const p = getClosest(e.clientX - rect.left, e.clientY - rect.top);
-        const name = prompt("請為這個點輸入名稱 (例如 A, B, 甲, 乙):", "A");
-        if(name) {
-            labels.push({x: p.x, y: p.y, text: name});
-            draw();
-        }
+        const name = prompt("請輸入點名:", "A");
+        if(name) { labels.push({x: p.x, y: p.y, text: name}); actionHistory.push('label'); draw(); }
     });
 
-    // 工具按鈕功能
-    function undoLastLine() { lines.pop(); draw(); }
-    function clearCanvas() { 
-        lines = []; labels = []; startPoint = null; draw(); 
-        document.getElementById('infoPanel').innerHTML = "已清空，請重新開始繪製。";
+    function undoLastAction() {
+        const lastAction = actionHistory.pop();
+        if(!lastAction) return;
+        if(lastAction === 'line') lines.pop();
+        else if(lastAction === 'fill') filledCells.pop();
+        else if(lastAction === 'label') labels.pop();
+        // 如果是旋轉，復原則再轉 270 度 (等於退回)
+        else if(lastAction === 'rotate') { actionHistory.pop(); rotateCanvas90(); rotateCanvas90(); rotateCanvas90(); } 
+        startPoint = null; draw();
     }
 
-    // 網格變更與視窗縮放對齊
-    document.getElementById('gridSize').addEventListener('change', (e) => { 
-        gridSize = parseInt(e.target.value); 
-        clearCanvas(); 
-        init(); 
-    });
+    function clearCanvas() { lines = []; filledCells = []; labels = []; actionHistory = []; startPoint = null; draw(); }
+    document.getElementById('gridSize').addEventListener('change', (e) => { gridSize = parseInt(e.target.value); clearCanvas(); init(); });
     window.addEventListener('resize', init);
-    
-    // 啟動程式
     window.onload = init;
 </script>
 </body>
 </html>
-
-
