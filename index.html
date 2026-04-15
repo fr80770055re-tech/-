@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>幾何探究學習工具 - 複合圖形版</title>
+    <title>幾何探究學習工具 - 複合圖形題庫版</title>
     <style>
         :root {
             --primary-warm: #ffecd2;
             --accent-warm: #fcb69f;
             --text-dark: #5d4037;
-            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.85);
         }
         body { 
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; 
-            background: linear-gradient(120deg, var(--primary-warm) 0%, var(--accent-warm) 100%);
+            background: linear-gradient(135deg, var(--primary-warm) 0%, var(--accent-warm) 100%);
             margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh;
         }
         .main-container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; width: 100%; align-items: flex-start; }
@@ -21,33 +21,37 @@
         #canvas-container { 
             width: 100%; aspect-ratio: 1 / 1; position: relative; 
             background: var(--glass-bg); backdrop-filter: blur(10px);
-            border-radius: 20px; border: 2px solid rgba(255,255,255,0.5);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1); overflow: hidden;
+            border-radius: 20px; border: 2px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15); overflow: hidden;
         }
-        canvas { display: block; cursor: crosshair; touch-action: none; }
+        canvas { display: block; cursor: crosshair; touch-action: none; position: absolute; top: 0; left: 0; }
         
         .sidebar { flex: 1 1 350px; display: flex; flex-direction: column; gap: 15px; }
         .controls { 
             background: var(--glass-bg); backdrop-filter: blur(10px);
-            padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3);
+            padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.4);
             display: flex; flex-direction: column; gap: 12px; color: var(--text-dark);
         }
-        .mode-toggle { display: flex; gap: 10px; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 12px; }
-        .mode-btn { flex: 1; padding: 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .mode-btn.active { background: white; color: #ff8a65; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .control-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: bold; }
+        select, input[type="color"] { padding: 5px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em; }
+        
+        .mode-toggle { display: flex; gap: 10px; background: rgba(0,0,0,0.05); padding: 6px; border-radius: 12px; }
+        .mode-btn { flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .mode-btn.active { background: white; color: #ff6b6b; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
         button { 
-            padding: 10px 15px; border: none; border-radius: 10px; cursor: pointer; 
-            background: #fff; color: var(--text-dark); font-weight: bold; 
+            padding: 12px 15px; border: none; border-radius: 10px; cursor: pointer; 
+            background: #fff; color: var(--text-dark); font-weight: bold; font-size: 1em;
             transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        button.primary { background: #ff8a65; color: white; }
-        button.quiz-btn { background: #81c784; color: white; }
+        button.primary { background: #ff6b6b; color: white; }
+        button.quiz-btn { background: #4caf50; color: white; font-size: 1.1em; }
+        button.sol-btn { background: #2196f3; color: white; display: none; }
         
         #infoPanel { 
             padding: 20px; background: var(--glass-bg); backdrop-filter: blur(10px);
-            border-radius: 20px; border-left: 8px solid #ff8a65; line-height: 1.6; color: var(--text-dark);
+            border-radius: 20px; border-left: 8px solid #ff6b6b; line-height: 1.6; color: var(--text-dark); font-size: 1.05em;
         }
     </style>
 </head>
@@ -64,18 +68,32 @@
                 <div id="mode-draw" class="mode-btn active" onclick="setMode('draw')">🖋️ 畫線</div>
                 <div id="mode-fill" class="mode-btn" onclick="setMode('fill')">🪣 塗色</div>
             </div>
-            <div style="display:flex; gap:10px;">
-                <button class="quiz-btn" style="flex:1" onclick="generateQuiz()">🎲 複合圖形出題</button>
-                <button id="sol-btn" style="flex:1; display:none;" onclick="showSolution()">📖 查看詳解</button>
+            
+            <div class="control-row">
+                <label>選擇網格大小：</label>
+                <select id="gridSize">
+                    <option value="5">5x5</option>
+                    <option value="9" selected>9x9</option>
+                    <option value="16">16x16</option>
+                </select>
             </div>
-            <button class="primary" onclick="calculateShape()">📐 計算與分類</button>
+            <div class="control-row">
+                <label>畫筆顏色：</label>
+                <input type="color" id="toolColor" value="#5d4037">
+            </div>
+
+            <button class="quiz-btn" onclick="generateQuiz()">🎲 隨機複合圖形出題</button>
+            <button id="sol-btn" class="sol-btn" onclick="showSolution()">📖 查看解答與切割方式</button>
+            
+            <button class="primary" onclick="calculateShape()">📐 計算我畫的圖形</button>
+            
             <div style="display:flex; gap:10px;">
                 <button onclick="undoLastAction()" style="flex:1">↩️ 復原</button>
-                <button onclick="clearCanvas()" style="flex:1">🧹 清空</button>
+                <button onclick="clearCanvas()" style="flex:1">🧹 全部清空</button>
             </div>
-            <button onclick="rotateCanvas90()">🔄 旋轉 90°</button>
+            <button onclick="rotateCanvas90()">🔄 全圖旋轉 90°</button>
         </div>
-        <div id="infoPanel">歡迎！請選擇「畫線」開始繪圖，或點擊「複合圖形出題」來練習。</div>
+        <div id="infoPanel">歡迎！您可以自由繪圖，或點擊上方「隨機複合圖形出題」來進行計算挑戰。</div>
     </div>
 </div>
 
@@ -86,93 +104,168 @@
     let gridSize = 9, lines = [], filledCells = [], labels = [], quizData = null;
     let startPoint = null, mousePos = {x:0, y:0}, currentMode = 'draw', actionHistory = [];
 
+    // --- 題庫模板定義 (pts: 頂點座標, cuts: 切割線解答) ---
+    const templates = [
+        { // L型
+            pts: [{x:0,y:0},{x:2,y:0},{x:2,y:3},{x:5,y:3},{x:5,y:5},{x:0,y:5}],
+            cuts: [{x1:2, y1:3, x2:0, y2:3}],
+            desc: "將圖形水平切開，會分成上方和下方的兩個長方形。"
+        },
+        { // T型
+            pts: [{x:0,y:0},{x:6,y:0},{x:6,y:2},{x:4,y:2},{x:4,y:5},{x:2,y:5},{x:2,y:2},{x:0,y:2}],
+            cuts: [{x1:2, y1:2, x2:4, y2:2}],
+            desc: "可以切成上方一個橫的長方形，以及下方一個直的長方形。"
+        },
+        { // 階梯型
+            pts: [{x:0,y:0},{x:2,y:0},{x:2,y:2},{x:4,y:2},{x:4,y:4},{x:0,y:4}],
+            cuts: [{x1:2, y1:2, x2:0, y2:2}],
+            desc: "將突出的區塊切下，可以看成兩個基本的長方形相加。"
+        },
+        { // U型 / 凹型
+            pts: [{x:0,y:0},{x:5,y:0},{x:5,y:2},{x:3,y:2},{x:3,y:4},{x:5,y:4},{x:5,y:6},{x:0,y:6}],
+            cuts: [{x1:3, y1:2, x2:0, y2:2}, {x1:3, y1:4, x2:0, y2:4}],
+            desc: "可使用切割法分為三塊，或者使用『補全法』看成大長方形減去缺口喔！"
+        }
+    ];
+
     function init() {
         canvas.width = container.clientWidth; canvas.height = container.clientHeight;
-        updateGridDisplay();
-        draw();
-    }
-
-    function updateGridDisplay() {
         const cellSize = canvas.width / (gridSize - 1);
-        container.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)`;
+        container.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px)`;
         container.style.backgroundSize = `${cellSize}px ${cellSize}px`;
+        draw();
     }
 
     function draw() {
         const cellSize = canvas.width / (gridSize - 1);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 1. 填色
+        // 1. 畫塗色格子
         filledCells.forEach(c => {
-            ctx.fillStyle = c.color; ctx.globalAlpha = 0.4;
+            ctx.fillStyle = c.color; ctx.globalAlpha = 0.5;
             ctx.fillRect(c.c * cellSize, c.r * cellSize, cellSize, cellSize);
             ctx.globalAlpha = 1.0;
         });
 
-        // 2. 網格點
+        // 2. 畫網格點
         ctx.fillStyle = "rgba(0,0,0,0.2)";
         for(let i=0; i<gridSize; i++) {
             for(let j=0; j<gridSize; j++) {
-                ctx.beginPath(); ctx.arc(j*cellSize, i*cellSize, 3, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(j*cellSize, i*cellSize, 4, 0, Math.PI*2); ctx.fill();
             }
         }
 
-        // 3. 題目引導 (如果是題目模式)
+        // 3. 畫解答切割線 (如果已顯示解答)
         if(quizData && quizData.showSol) {
-            ctx.setLineDash([10, 5]); ctx.strokeStyle = "rgba(255, 0, 0, 0.5)"; ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(quizData.solLine.x1 * cellSize, quizData.solLine.y1 * cellSize);
-            ctx.lineTo(quizData.solLine.x2 * cellSize, quizData.solLine.y2 * cellSize);
-            ctx.stroke(); ctx.setLineDash([]);
+            ctx.setLineDash([8, 6]); ctx.strokeStyle = "#ff3d00"; ctx.lineWidth = 3;
+            quizData.cuts.forEach(c => {
+                ctx.beginPath();
+                ctx.moveTo(c.x1 * cellSize, c.y1 * cellSize);
+                ctx.lineTo(c.x2 * cellSize, c.y2 * cellSize);
+                ctx.stroke();
+            });
+            ctx.setLineDash([]);
         }
 
-        // 4. 線條
+        // 4. 畫實體線條
         lines.forEach(l => {
-            ctx.strokeStyle = l.color || "#5d4037"; ctx.lineWidth = 4; ctx.lineCap = "round";
+            ctx.strokeStyle = l.color || "#5d4037"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round";
             ctx.beginPath(); ctx.moveTo(l.start.x, l.start.y); ctx.lineTo(l.end.x, l.end.y); ctx.stroke();
         });
 
-        // 5. PC 預覽與光環
+        // 5. 畫選取點光環與預覽線 (PC與平板共用優化)
         if(currentMode === 'draw' && startPoint) {
-            ctx.beginPath(); ctx.arc(startPoint.x, startPoint.y, 12, 0, Math.PI*2);
-            ctx.fillStyle = "rgba(255, 138, 101, 0.2)"; ctx.fill();
-            ctx.setLineDash([5,5]); ctx.strokeStyle = "#ff8a65"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(startPoint.x, startPoint.y, 14, 0, Math.PI*2);
+            ctx.fillStyle = "rgba(255, 107, 107, 0.3)"; ctx.fill();
+            
+            ctx.setLineDash([6,6]); ctx.strokeStyle = document.getElementById('toolColor').value; ctx.lineWidth = 3;
             ctx.beginPath(); ctx.moveTo(startPoint.x, startPoint.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]);
         }
 
+        // 6. 標記文字
         labels.forEach(lb => {
-            ctx.fillStyle = "#5d4037"; ctx.font = "bold 20px Arial";
+            ctx.fillStyle = "#5d4037"; ctx.font = "bold 22px Arial";
             ctx.fillText(lb.text, lb.x + 10, lb.y - 10);
         });
     }
 
-    function generateQuiz() {
-        clearCanvas();
-        const cellSize = canvas.width / (gridSize - 1);
-        // 生成 L 型複合圖形模板
-        const ox = 2, oy = 2, w1 = 4, h1 = 2, w2 = 2, h2 = 4; 
-        const pts = [
-            {x:ox, y:oy}, {x:ox+w1, y:oy}, {x:ox+w1, y:oy+h1}, 
-            {x:ox+w2, y:oy+h1}, {x:ox+w2, y:oy+h1+h2-h1}, {x:ox, y:oy+h2}
-        ];
-        // 簡化示範：固定 L 型
-        const quizPts = [
-            {x:2,y:2}, {x:6,y:2}, {x:6,y:4}, {x:4,y:4}, {x:4,y:7}, {x:2,y:7}
-        ];
-        for(let i=0; i<quizPts.length; i++) {
-            const p1 = quizPts[i];
-            const p2 = quizPts[(i+1)%quizPts.length];
-            lines.push({start: {x:p1.x*cellSize, y:p1.y*cellSize}, end: {x:p2.x*cellSize, y:p2.y*cellSize}, color: "#5d4037"});
+    // --- 計算幾何演算法 ---
+    function calcPolygonArea(pts) {
+        let area = 0;
+        for (let i = 0; i < pts.length; i++) {
+            let j = (i + 1) % pts.length;
+            area += pts[i].x * pts[j].y;
+            area -= pts[j].x * pts[i].y;
         }
+        return Math.abs(area / 2);
+    }
+    function calcPolygonPerimeter(pts) {
+        let perim = 0;
+        for (let i = 0; i < pts.length; i++) {
+            let j = (i + 1) % pts.length;
+            perim += Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
+        }
+        return perim;
+    }
+
+    // --- 隨機出題核心邏輯 ---
+    function generateQuiz() {
+        if (gridSize < 9) { // 確保網格夠大放得下圖形
+            document.getElementById('gridSize').value = "9";
+            gridSize = 9; init();
+        }
+        clearCanvas();
+        
+        // 1. 隨機選一個模板
+        let template = templates[Math.floor(Math.random() * templates.length)];
+        let pts = template.pts.map(p => ({...p}));
+        let cuts = template.cuts.map(c => ({...c}));
+        
+        // 2. 隨機旋轉 (0, 90, 180, 270度)
+        let rot = Math.floor(Math.random() * 4);
+        for(let i=0; i<rot; i++) {
+            pts = pts.map(p => ({x: -p.y, y: p.x}));
+            cuts = cuts.map(c => ({x1: -c.y1, y1: c.x1, x2: -c.y2, y2: c.x2}));
+        }
+        
+        // 3. 正規化座標 (將圖形推回第一象限)
+        let minX = Math.min(...pts.map(p=>p.x)), minY = Math.min(...pts.map(p=>p.y));
+        pts.forEach(p => { p.x -= minX; p.y -= minY; });
+        cuts.forEach(c => { c.x1 -= minX; c.x2 -= minX; c.y1 -= minY; c.y2 -= minY; });
+        
+        // 4. 計算邊界與隨機平移 (放在網格內的隨機位置)
+        let w = Math.max(...pts.map(p=>p.x)), h = Math.max(...pts.map(p=>p.y));
+        let maxAvail = gridSize - 1;
+        let offsetX = Math.floor(Math.random() * (maxAvail - w + 1));
+        let offsetY = Math.floor(Math.random() * (maxAvail - h + 1));
+        
+        pts.forEach(p => { p.x += offsetX; p.y += offsetY; });
+        cuts.forEach(c => { c.x1 += offsetX; c.x2 += offsetX; c.y1 += offsetY; c.y2 += offsetY; });
+
+        // 5. 轉換為實際畫布線條
+        const cellSize = canvas.width / (gridSize - 1);
+        for(let i=0; i<pts.length; i++) {
+            let p1 = pts[i], p2 = pts[(i+1)%pts.length];
+            lines.push({start: {x: p1.x*cellSize, y: p1.y*cellSize}, end: {x: p2.x*cellSize, y: p2.y*cellSize}, color: "#333"});
+        }
+        
+        // 儲存解答資料
         quizData = { 
-            area: (4*2) + (2*3), 
-            perimeter: 4+2+2+3+2+5, 
-            solLine: {x1: 4, y1: 2, x2: 4, y2: 4},
-            desc: "這個圖形可以切成一個 4×2 的長方形與一個 2×3 的長方形。",
-            showSol: false 
+            area: calcPolygonArea(pts), 
+            perimeter: calcPolygonPerimeter(pts), 
+            cuts: cuts, desc: template.desc, showSol: false 
         };
+        
         document.getElementById('sol-btn').style.display = "block";
-        document.getElementById('infoPanel').innerHTML = "<strong>題目：</strong> 請計算畫布上複合圖形的「面積」與「周長」。";
+        document.getElementById('infoPanel').innerHTML = `
+            <strong>🎲 新挑戰出現了！</strong><br><br>
+            請觀察右方的複合圖形，並算出：<br>
+            <ul>
+                <li><strong>面積 = ?</strong> 平方單位</li>
+                <li><strong>周長 = ?</strong> 單位長</li>
+            </ul>
+            <p style="color:#666; font-size:0.9em;">✏️ 提示：你可以用「塗色工具」來點擊格子輔助計算，或者在圖形上畫輔助線！</p>
+        `;
         draw();
     }
 
@@ -180,44 +273,106 @@
         if(!quizData) return;
         quizData.showSol = true;
         document.getElementById('infoPanel').innerHTML = `
-            <strong>詳解：</strong><br>
-            1. 分割法：如虛線所示，切成兩塊矩形。<br>
-            2. 面積 = (4 × 2) + (2 × 3) = 8 + 6 = 14 平方單位。<br>
-            3. 周長 = 4 + 2 + 2 + 3 + 2 + 5 = 18 單位。
+            <strong>💡 解答與思路：</strong><br><br>
+            <ul>
+                <li>📐 <strong>面積 = ${quizData.area}</strong> 平方單位</li>
+                <li>📏 <strong>周長 = ${quizData.perimeter}</strong> 單位長</li>
+            </ul>
+            <hr style="border:0; border-top:1px solid #ccc; margin:15px 0;">
+            <strong>思考方式：</strong><br>
+            ${quizData.desc}<br>
+            <span style="color:#ff3d00;">(畫布上已為您標示出紅色的虛線切割法)</span>
         `;
         draw();
     }
 
+    // --- 互動控制 ---
     function setMode(m) { currentMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); document.getElementById('mode-'+m).classList.add('active'); startPoint = null; draw(); }
     
+    // PC滑鼠跟隨預覽優化
     canvas.addEventListener('pointermove', (e) => {
         const rect = canvas.getBoundingClientRect();
         mousePos = {x: e.clientX - rect.left, y: e.clientY - rect.top};
-        draw();
+        if(currentMode === 'draw') draw();
     });
 
+    let longPressTimer = null;
     canvas.addEventListener('pointerdown', (e) => {
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left, my = e.clientY - rect.top;
         const cellSize = canvas.width / (gridSize - 1);
         const p = { x: Math.round(mx/cellSize)*cellSize, y: Math.round(my/cellSize)*cellSize };
 
+        longPressTimer = setTimeout(() => {
+            if(currentMode === 'draw') {
+                const name = prompt("請輸入頂點代號 (例如 A):", "A");
+                if(name) { labels.push({x: p.x, y: p.y, text: name}); actionHistory.push('label'); draw(); }
+                startPoint = null; 
+            }
+        }, 500);
+
         if(currentMode === 'draw') {
             if(startPoint) {
-                lines.push({start: startPoint, end: p, color: document.getElementById('lineColor')?.value || "#5d4037"});
+                clearTimeout(longPressTimer);
+                lines.push({start: startPoint, end: p, color: document.getElementById('toolColor').value});
                 actionHistory.push('line'); startPoint = null;
             } else { startPoint = p; }
         } else {
+            clearTimeout(longPressTimer);
             const c = Math.floor(mx/cellSize), r = Math.floor(my/cellSize);
-            filledCells.push({c, r, color: "#ff8a65"}); actionHistory.push('fill');
+            if (c < gridSize-1 && r < gridSize-1) {
+                const idx = filledCells.findIndex(cell => cell.c === c && cell.r === r);
+                if (idx > -1) filledCells.splice(idx, 1);
+                else filledCells.push({c, r, color: document.getElementById('toolColor').value});
+                actionHistory.push('fill');
+            }
         }
         draw();
     });
 
-    function undoLastAction() { const a = actionHistory.pop(); if(a === 'line') lines.pop(); else if(a === 'fill') filledCells.pop(); startPoint = null; draw(); }
-    function clearCanvas() { lines = []; filledCells = []; labels = []; quizData = null; document.getElementById('sol-btn').style.display = "none"; draw(); }
-    function rotateCanvas90() { /* ... 同前版本旋轉邏輯 ... */ draw(); }
-    function calculateShape() { /* ... 同前版本分析邏輯 ... */ document.getElementById('infoPanel').innerHTML = "分析完成！請觀察邊長關係。"; }
+    canvas.addEventListener('pointerup', () => clearTimeout(longPressTimer));
+    canvas.addEventListener('pointerout', () => clearTimeout(longPressTimer));
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    // --- 工具列按鈕 ---
+    function rotateCanvas90() {
+        const center = canvas.width / 2;
+        const rot = (p) => ({ x: center - (p.y - center), y: center + (p.x - center) });
+        lines.forEach(l => { l.start = rot(l.start); l.end = rot(l.end); });
+        labels.forEach(lb => { const np = rot(lb); lb.x = np.x; lb.y = np.y; });
+        filledCells.forEach(c => {
+            const cs = canvas.width / (gridSize - 1);
+            const cc = rot({ x: c.c * cs + cs/2, y: c.r * cs + cs/2 });
+            c.c = Math.floor(cc.x / cs); c.r = Math.floor(cc.y / cs);
+        });
+        if(quizData && quizData.cuts) {
+            quizData.cuts.forEach(c => {
+                let p1 = rot({x: c.x1* (canvas.width / (gridSize - 1)), y: c.y1* (canvas.width / (gridSize - 1))});
+                let p2 = rot({x: c.x2* (canvas.width / (gridSize - 1)), y: c.y2* (canvas.width / (gridSize - 1))});
+                c.x1 = p1.x / (canvas.width / (gridSize - 1)); c.y1 = p1.y / (canvas.width / (gridSize - 1));
+                c.x2 = p2.x / (canvas.width / (gridSize - 1)); c.y2 = p2.y / (canvas.width / (gridSize - 1));
+            });
+        }
+        actionHistory.push('rotate'); draw();
+    }
+
+    function calculateShape() {
+        if(lines.length < 3) return;
+        ctx.fillStyle = "rgba(255, 107, 107, 0.2)";
+        ctx.beginPath(); ctx.moveTo(lines[0].start.x, lines[0].start.y);
+        lines.forEach(l => ctx.lineTo(l.end.x, l.end.y)); ctx.closePath(); ctx.fill();
+        document.getElementById('infoPanel').innerHTML = `<strong>圖形已分析！</strong><br>您可切換至「塗色」模式，驗證自己計算的格子數量是否正確。`;
+    }
+
+    function undoLastAction() { const a = actionHistory.pop(); if(a === 'line') lines.pop(); else if(a === 'fill') filledCells.pop(); else if(a === 'label') labels.pop(); else if(a === 'rotate') { actionHistory.pop(); rotateCanvas90(); rotateCanvas90(); rotateCanvas90(); } startPoint = null; draw(); }
+    function clearCanvas() { lines = []; filledCells = []; labels = []; actionHistory = []; quizData = null; startPoint = null; document.getElementById('sol-btn').style.display = "none"; draw(); }
+    
+    // 修復畫布網格調整功能
+    document.getElementById('gridSize').addEventListener('change', (e) => { 
+        gridSize = parseInt(e.target.value); 
+        clearCanvas(); 
+        init(); 
+    });
 
     window.onload = init;
     window.onresize = init;
