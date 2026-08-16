@@ -3,79 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>幾何探究學習工具 - 全能旗艦版</title>
+    <title>幾何探究學習工具 - 專業分頁版</title>
     <style>
-        :root { --primary-warm: #ffecd2; --accent-warm: #fcb69f; --text-dark: #5d4037; --glass-bg: rgba(255, 255, 255, 0.85); }
-        body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background: linear-gradient(135deg, var(--primary-warm) 0%, var(--accent-warm) 100%); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; overscroll-behavior-y: none; }
+        :root { --primary: #ffecd2; --accent: #fcb69f; --text: #5d4037; --glass: rgba(255, 255, 255, 0.9); }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, var(--primary), var(--accent)); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overscroll-behavior-y: none; }
+        
+        /* 頂部分頁導航 */
+        .tab-nav { display: flex; gap: 10px; width: 100%; max-width: 1200px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 15px; font-size: 1.1em; font-weight: bold; color: var(--text); background: rgba(255,255,255,0.5); border: 2px solid transparent; border-radius: 15px 15px 0 0; cursor: pointer; transition: 0.3s; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); }
+        .tab-btn.active { background: white; border-bottom: 3px solid #ff6b6b; color: #ff6b6b; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); }
+
+        /* 主體佈局 */
         .main-container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; width: 100%; align-items: flex-start; }
         .canvas-section { flex: 1 1 500px; }
-        #canvas-container { 
-            width: 100%; aspect-ratio: 1 / 1; position: relative; background: var(--glass-bg); backdrop-filter: blur(10px);
-            border-radius: 20px; border: 2px solid rgba(255,255,255,0.6); box-shadow: 0 8px 32px rgba(0,0,0,0.15); overflow: hidden;
-        }
-        canvas { display: block; cursor: crosshair; touch-action: none; position: absolute; top: 0; left: 0; }
+        #canvas-container { width: 100%; aspect-ratio: 1 / 1; position: relative; background: white; border-radius: 0 0 20px 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); overflow: hidden; touch-action: none; }
+        canvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
+        /* 側邊控制面板 */
         .sidebar { flex: 1 1 350px; display: flex; flex-direction: column; gap: 15px; }
-        .controls { background: var(--glass-bg); backdrop-filter: blur(10px); padding: 15px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.4); display: flex; flex-direction: column; gap: 10px; color: var(--text-dark); }
-        .control-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: bold; }
-        select, input[type="color"] { padding: 5px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em; }
+        .tab-content { display: none; flex-direction: column; gap: 15px; }
+        .tab-content.active { display: flex; }
         
-        .mode-toggle { display: flex; gap: 8px; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 12px; }
-        .mode-btn { flex: 1; padding: 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .controls { background: var(--glass); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px; }
+        .control-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: bold; color: var(--text); }
+        select, input[type="color"] { padding: 6px; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; }
+        
+        .mode-toggle { display: flex; gap: 8px; background: rgba(0,0,0,0.05); padding: 6px; border-radius: 12px; }
+        .mode-btn { flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: white; color: #ff6b6b; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .section-title { font-size: 0.9em; color: #888; text-transform: uppercase; margin-top: 5px; margin-bottom: -5px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
 
-        button { padding: 8px 10px; border: none; border-radius: 8px; cursor: pointer; background: #fff; color: var(--text-dark); font-weight: bold; font-size: 0.95em; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        button { padding: 10px; border: none; border-radius: 10px; cursor: pointer; background: #eee; color: var(--text); font-weight: bold; font-size: 1em; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         button.primary { background: #ff6b6b; color: white; }
-        button.quiz-area { background: #4caf50; color: white; }
-        button.quiz-angle { background: #9c27b0; color: white; }
-        button.magic-btn { background: #fbc02d; color: #333; font-size: 1em; border: 2px solid #f9a825; }
+        button.action { background: #2196f3; color: white; }
         
-        #infoPanel { padding: 20px; background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; border-left: 8px solid #ff6b6b; line-height: 1.6; color: var(--text-dark); font-size: 1.05em; min-height: 120px; }
-        
-        input[type=range] { width: 100%; cursor: pointer; }
-        .demo-panel { background: rgba(255,255,255,0.7); padding: 10px; border-radius: 12px; border: 1px dashed #ccc; margin-top: 10px; }
-        .flex-btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
-        .flex-btn-group button { flex: 1; min-width: 30%; }
+        .info-panel { padding: 20px; background: var(--glass); border-radius: 20px; border-left: 8px solid #ff6b6b; line-height: 1.6; color: var(--text); font-size: 1.05em; min-height: 120px; }
+        input[type=range] { width: 100%; }
     </style>
 </head>
 <body>
 
+<!-- 分頁導航 -->
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('draw')">✏️ 自由繪製與面積</button>
+    <button class="tab-btn" onclick="switchTab('angle')">📏 量角器實作</button>
+    <button class="tab-btn" onclick="switchTab('triangle')">✨ 內角和實驗</button>
+</div>
+
 <div class="main-container">
+    <!-- 共用畫布區 -->
     <div class="canvas-section">
         <div id="canvas-container"><canvas id="canvas"></canvas></div>
     </div>
 
     <div class="sidebar">
-        <div class="controls">
-            <div class="section-title">基礎工具</div>
-            <div class="mode-toggle">
-                <div id="mode-draw" class="mode-btn active" onclick="setMode('draw')">🖋️ 畫線</div>
-                <div id="mode-fill" class="mode-btn" onclick="setMode('fill')">🪣 塗色</div>
+        <!-- 分頁 1: 自由繪製 -->
+        <div id="tab-draw" class="tab-content active">
+            <div class="controls">
+                <div class="mode-toggle">
+                    <div id="draw-mode-line" class="mode-btn active" onclick="setDrawMode('line')">🖋️ 畫線</div>
+                    <div id="draw-mode-fill" class="mode-btn" onclick="setDrawMode('fill')">🪣 塗色</div>
+                </div>
+                <div class="control-row">
+                    <label>網格：</label><select id="gridSize" onchange="resetDraw()"><option value="5">5x5</option><option value="9" selected>9x9</option><option value="16">16x16</option></select>
+                    <label>顏色：</label><input type="color" id="drawColor" value="#5d4037">
+                </div>
+                <button class="action" onclick="generateCompositeQuiz()">🎲 出題：複合面積</button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="undoDraw()" style="flex:1">↩️ 復原</button>
+                    <button onclick="resetDraw()" style="flex:1">🧹 清空</button>
+                </div>
             </div>
-            <div class="control-row">
-                <select id="gridSize"><option value="5">5x5</option><option value="9" selected>9x9</option><option value="16">16x16</option></select>
-                <input type="color" id="toolColor" value="#5d4037">
-                <button onclick="toggleProtractor()" style="border: 2px solid #2196f3; color: #2196f3;">📏 量角器</button>
-            </div>
-
-            <div class="section-title">教學挑戰與實驗</div>
-            <div class="flex-btn-group">
-                <button class="quiz-area" onclick="generateAreaQuiz()">🎲 複合面積</button>
-                <button class="quiz-angle" onclick="generateAngleQuiz()">📐 隨機角度</button>
-                <button class="magic-btn" onclick="startTriDemo()" style="flex:100%;">✨ 內角和 180° 實驗</button>
-            </div>
-            
-            <div class="section-title">操作與分析</div>
-            <div style="display:flex; gap:5px;">
-                <button class="primary" onclick="calculateShape()" style="flex:2">📐 計算圖形</button>
-                <button onclick="undoLastAction()" style="flex:1">↩️ 復原</button>
-                <button onclick="clearCanvas()" style="flex:1">🧹 清空</button>
+            <div class="info-panel" id="info-draw">
+                <strong>操作說明：</strong><br>1. 左鍵連線，右鍵/長按標註點名。<br>2. 點擊「出題」可練習複合圖形計算。
             </div>
         </div>
-        <div id="infoPanel">
-            歡迎！您可以自由繪圖，或點擊「實驗與挑戰」來探索幾何的奧秘。
+
+        <!-- 分頁 2: 量角器 -->
+        <div id="tab-angle" class="tab-content">
+            <div class="controls">
+                <button class="action" onclick="generateAngleQuiz()">📐 產生隨機角度</button>
+                <div style="background: rgba(33,150,243,0.1); padding: 15px; border-radius: 12px; margin-top: 10px;">
+                    <strong>📏 量角器操作技巧：</strong><br>
+                    🔸 拖曳「中心點」移動量角器。<br>
+                    🔸 拖曳「圓弧邊緣」旋轉角度。<br>
+                    🔸 內圈是紅字，外圈是黑字喔！
+                </div>
+                <button class="primary" onclick="showAngleSol()">💡 查看正確度數</button>
+            </div>
+            <div class="info-panel" id="info-angle">請點擊上方按鈕產生一個角度來量量看！</div>
+        </div>
+
+        <!-- 分頁 3: 內角和實驗 -->
+        <div id="tab-triangle" class="tab-content">
+            <div class="controls">
+                <div class="control-row" style="justify-content: center; gap: 5px;">
+                    <button onclick="setupTriDemo('acute')">銳角三角形</button>
+                    <button onclick="setupTriDemo('right')">直角三角形</button>
+                    <button onclick="setupTriDemo('obtuse')">鈍角三角形</button>
+                </div>
+                <div class="mode-toggle">
+                    <div id="tri-mode-auto" class="mode-btn active" onclick="setTriMode('auto')">▶️ 自動拼合動畫</div>
+                    <div id="tri-mode-manual" class="mode-btn" onclick="setTriMode('manual')">🖐️ 手動拖曳拼圖</div>
+                </div>
+                <div id="tri-slider-container" style="display:none; margin-top:10px;">
+                    <label style="font-size:0.9em; color:#ff6b6b;">旋轉選取的角：</label>
+                    <input type="range" id="triSlider" min="-180" max="180" value="0" oninput="rotateSelectedTri(this.value)">
+                </div>
+            </div>
+            <div class="info-panel" id="info-triangle">請選擇一種三角形，觀察它的三個角拼起來會變成什麼樣子！</div>
         </div>
     </div>
 </div>
@@ -85,293 +121,309 @@
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('canvas-container');
     
-    // 基礎狀態
-    let gridSize = 9, lines = [], filledCells = [], labels = [], quizData = null;
-    let startPoint = null, mousePos = {x:0, y:0}, currentMode = 'draw', actionHistory = [];
+    // ==========================================
+    // 狀態機設計 (嚴格隔離)
+    // ==========================================
+    let currentTab = 'draw';
+    let mousePos = {x:0, y:0};
 
-    // 量角器狀態
-    let showProtractor = false;
-    let protractor = { x: 250, y: 250, radius: 150, angle: 0, isDragging: false, isRotating: false, dragOffsetX: 0, dragOffsetY: 0, startMouseAngle: 0, startAngle: 0 };
-
-    // 三角形內角和實驗狀態
-    let triDemo = { 
-        active: false, mode: 'auto', type: 'acute', progress: 0, animReq: null,
-        v1: null, v2: null, v3: null, pieces: [], selectedPiece: null 
+    // Tab 1 狀態
+    let drawState = { mode: 'line', size: 9, lines: [], fills: [], labels: [], startPoint: null, history: [], quiz: null };
+    
+    // Tab 2 狀態
+    let angleState = { 
+        v: null, radStart: 0, radTotal: 0, deg: 0, sol: false, active: false,
+        pro: { x:250, y:250, r:160, angle:0, dragging:false, rotating:false, offX:0, offY:0, startMAngle:0, startAngle:0 }
     };
 
-    const areaTemplates = [
-        { pts: [{x:0,y:0},{x:2,y:0},{x:2,y:3},{x:5,y:3},{x:5,y:5},{x:0,y:5}], cuts: [{x1:2,y1:3,x2:0,y2:3}], desc: "L型：切成上方和下方的兩個長方形。" },
-        { pts: [{x:0,y:0},{x:5,y:0},{x:5,y:2},{x:2,y:2},{x:2,y:4},{x:5,y:4},{x:5,y:6},{x:0,y:6}], cuts: [{x1:2,y1:2,x2:0,y2:2}, {x1:2,y1:4,x2:0,y2:4}], desc: "C型：切成上、中、下三個長方形！" }
-    ];
+    // Tab 3 狀態
+    let triState = {
+        type: 'acute', mode: 'auto', active: false, progress: 0, animReq: null,
+        v1:null, v2:null, v3:null, pieces:[], selected: null
+    };
 
+    // 初始化與響應式
     function init() {
         canvas.width = container.clientWidth; canvas.height = container.clientHeight;
-        protractor.x = canvas.width / 2; protractor.y = canvas.height / 2;
-        updateGrid(); draw();
+        if(currentTab === 'draw') resetDraw();
+        if(currentTab === 'angle') { angleState.pro.x = canvas.width/2; angleState.pro.y = canvas.height/2; }
+        requestAnimationFrame(renderLoop);
     }
+    window.onload = init; window.onresize = init;
 
-    function updateGrid() {
-        const cellSize = canvas.width / (gridSize - 1);
-        container.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px)`;
-        container.style.backgroundSize = `${cellSize}px ${cellSize}px`;
+    // 分頁切換邏輯
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        
+        // 狀態重置
+        if(tab === 'draw') { resetDraw(); }
+        else if(tab === 'angle') { generateAngleQuiz(); }
+        else if(tab === 'triangle') { setupTriDemo('acute'); }
     }
 
     // ==========================================
-    // 繪圖引擎
+    // 統一渲染引擎 (依據 Tab 繪製)
     // ==========================================
-    function draw() {
-        const cellSize = canvas.width / (gridSize - 1);
+    function renderLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(currentTab === 'draw') renderDraw();
+        else if(currentTab === 'angle') renderAngle();
+        else if(currentTab === 'triangle') renderTriangle();
+        requestAnimationFrame(renderLoop);
+    }
+
+    // --- Tab 1 繪製 ---
+    function renderDraw() {
+        const cs = canvas.width / (drawState.size - 1);
+        // 背景網格線
+        ctx.strokeStyle = "rgba(0,0,0,0.05)"; ctx.lineWidth = 1;
+        for(let i=0; i<drawState.size; i++) {
+            ctx.beginPath(); ctx.moveTo(0, i*cs); ctx.lineTo(canvas.width, i*cs); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(i*cs, 0); ctx.lineTo(i*cs, canvas.height); ctx.stroke();
+        }
+        // 塗色與網格點
+        drawState.fills.forEach(f => { ctx.fillStyle = f.color; ctx.globalAlpha = 0.5; ctx.fillRect(f.c*cs, f.r*cs, cs, cs); ctx.globalAlpha=1; });
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        for(let i=0; i<drawState.size; i++) for(let j=0; j<drawState.size; j++) { ctx.beginPath(); ctx.arc(j*cs, i*cs, 4, 0, Math.PI*2); ctx.fill(); }
         
-        if(!triDemo.active) {
-            // 一般繪圖模式：網格、塗色、解答線、自己畫的線
-            filledCells.forEach(c => { ctx.fillStyle = c.color; ctx.globalAlpha = 0.5; ctx.fillRect(c.c * cellSize, c.r * cellSize, cellSize, cellSize); ctx.globalAlpha = 1.0; });
-            ctx.fillStyle = "rgba(0,0,0,0.2)";
-            for(let i=0; i<gridSize; i++) for(let j=0; j<gridSize; j++) { ctx.beginPath(); ctx.arc(j*cellSize, i*cellSize, 4, 0, Math.PI*2); ctx.fill(); }
-
-            if(quizData && quizData.type === 'area' && quizData.showSol) {
-                ctx.setLineDash([8, 6]); ctx.strokeStyle = "#ff3d00"; ctx.lineWidth = 3;
-                quizData.cuts.forEach(c => { ctx.beginPath(); ctx.moveTo(c.x1 * cellSize, c.y1 * cellSize); ctx.lineTo(c.x2 * cellSize, c.y2 * cellSize); ctx.stroke(); });
-                ctx.setLineDash([]);
-            }
-
-            lines.forEach(l => { ctx.strokeStyle = l.color || "#5d4037"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(l.start.x, l.start.y); ctx.lineTo(l.end.x, l.end.y); ctx.stroke(); });
-
-            if(quizData && quizData.type === 'angle') {
-                ctx.beginPath(); ctx.arc(quizData.v.x, quizData.v.y, 6, 0, Math.PI*2); ctx.fillStyle = "#ff3d00"; ctx.fill();
-                if(quizData.showSol) { ctx.beginPath(); ctx.arc(quizData.v.x, quizData.v.y, 40, quizData.radStart, quizData.radStart + quizData.radTotal); ctx.strokeStyle = "rgba(255, 61, 0, 0.5)"; ctx.lineWidth = 20; ctx.stroke(); }
-            }
-
-            if(currentMode === 'draw' && startPoint) {
-                ctx.beginPath(); ctx.arc(startPoint.x, startPoint.y, 14, 0, Math.PI*2); ctx.fillStyle = "rgba(255, 107, 107, 0.3)"; ctx.fill();
-                ctx.setLineDash([6,6]); ctx.strokeStyle = document.getElementById('toolColor').value; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(startPoint.x, startPoint.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]);
-            }
-            labels.forEach(lb => { ctx.fillStyle = "#5d4037"; ctx.font = "bold 22px Arial"; ctx.fillText(lb.text, lb.x + 10, lb.y - 10); });
-            
-            if (showProtractor) drawProtractor();
-        } 
-        else {
-            // 內角和 180度 實驗繪圖模式
-            ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.strokeStyle = "#ccc"; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(triDemo.v1.x, triDemo.v1.y); ctx.lineTo(triDemo.v2.x, triDemo.v2.y); ctx.lineTo(triDemo.v3.x, triDemo.v3.y); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-            // 畫目標平角底線
-            let ty = canvas.height - 80, tx = canvas.width / 2;
-            ctx.beginPath(); ctx.moveTo(tx - 180, ty); ctx.lineTo(tx + 180, ty); ctx.strokeStyle = "#999"; ctx.lineWidth = 4; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
-            ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI*2); ctx.fillStyle = "black"; ctx.fill();
-            ctx.fillStyle = "#666"; ctx.font = "16px Arial"; ctx.fillText("將三個角拼到這裡", tx - 65, ty + 25);
-
-            // 繪製三個動態扇形(角)
-            triDemo.pieces.forEach(p => {
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.rot);
-                
-                // 若被選中，加入高光外框
-                if(p === triDemo.selectedPiece) {
-                    ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0, 0, p.radius+5, p.start, p.start + p.sweep); ctx.closePath();
-                    ctx.fillStyle = "rgba(255, 235, 59, 0.5)"; ctx.fill();
-                }
-
-                ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0, 0, p.radius, p.start, p.start + p.sweep); ctx.closePath();
-                ctx.fillStyle = p.color; ctx.fill(); ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.stroke();
-                ctx.restore();
-            });
+        // 出題解答線
+        if(drawState.quiz && drawState.quiz.showSol) {
+            ctx.setLineDash([8,6]); ctx.strokeStyle = "#ff3d00"; ctx.lineWidth=3;
+            drawState.quiz.cuts.forEach(c => { ctx.beginPath(); ctx.moveTo(c.x1*cs, c.y1*cs); ctx.lineTo(c.x2*cs, c.y2*cs); ctx.stroke(); }); ctx.setLineDash([]);
         }
+        // 實體線段
+        drawState.lines.forEach(l => { ctx.strokeStyle = l.color; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(l.start.x, l.start.y); ctx.lineTo(l.end.x, l.end.y); ctx.stroke(); });
+        // 預覽與標記
+        if(drawState.mode === 'line' && drawState.startPoint) {
+            ctx.beginPath(); ctx.arc(drawState.startPoint.x, drawState.startPoint.y, 14, 0, Math.PI*2); ctx.fillStyle = "rgba(255,107,107,0.3)"; ctx.fill();
+            ctx.setLineDash([5,5]); ctx.strokeStyle = document.getElementById('drawColor').value; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(drawState.startPoint.x, drawState.startPoint.y); ctx.lineTo(mousePos.x, mousePos.y); ctx.stroke(); ctx.setLineDash([]);
+        }
+        drawState.labels.forEach(lb => { ctx.fillStyle = "#5d4037"; ctx.font = "bold 22px Arial"; ctx.fillText(lb.text, lb.x + 10, lb.y - 10); });
     }
 
-    // ==========================================
-    // 內角和 180度 實驗系統 (支援三種三角形與手動拖曳)
-    // ==========================================
-    function startTriDemo() {
-        clearCanvas(); showProtractor = false; triDemo.active = true; currentMode = 'demo';
-        setupTriData('acute');
-    }
+    // --- Tab 2 繪製 ---
+    function renderAngle() {
+        if(!angleState.active) return;
+        // 畫角度題目
+        ctx.strokeStyle = "#5d4037"; ctx.lineWidth = 6; ctx.lineCap = "round";
+        let p1 = {x: angleState.v.x + Math.cos(angleState.radStart)*200, y: angleState.v.y + Math.sin(angleState.radStart)*200};
+        let p2 = {x: angleState.v.x + Math.cos(angleState.radStart+angleState.radTotal)*200, y: angleState.v.y + Math.sin(angleState.radStart+angleState.radTotal)*200};
+        ctx.beginPath(); ctx.moveTo(angleState.v.x, angleState.v.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(angleState.v.x, angleState.v.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        ctx.beginPath(); ctx.arc(angleState.v.x, angleState.v.y, 6, 0, Math.PI*2); ctx.fillStyle = "#ff3d00"; ctx.fill();
 
-    function setupTriData(type) {
-        triDemo.type = type;
-        let w = canvas.width, h = canvas.height;
-        // 定義三種不同的三角形頂點
-        if(type === 'acute') { triDemo.v1 = {x: w*0.2, y: h*0.6}; triDemo.v2 = {x: w*0.8, y: h*0.6}; triDemo.v3 = {x: w*0.6, y: h*0.2}; }
-        else if(type === 'right') { triDemo.v1 = {x: w*0.3, y: h*0.6}; triDemo.v2 = {x: w*0.7, y: h*0.6}; triDemo.v3 = {x: w*0.3, y: h*0.2}; }
-        else if(type === 'obtuse') { triDemo.v1 = {x: w*0.2, y: h*0.5}; triDemo.v2 = {x: w*0.6, y: h*0.5}; triDemo.v3 = {x: w*0.8, y: h*0.2}; }
+        if(angleState.sol) {
+            ctx.beginPath(); ctx.arc(angleState.v.x, angleState.v.y, 50, angleState.radStart, angleState.radStart+angleState.radTotal);
+            ctx.strokeStyle = "rgba(255,61,0,0.5)"; ctx.lineWidth = 25; ctx.stroke();
+        }
+
+        // 畫玻璃量角器
+        let pro = angleState.pro;
+        ctx.save(); ctx.translate(pro.x, pro.y); ctx.rotate(pro.angle);
+        ctx.beginPath(); ctx.arc(0, 0, pro.r, Math.PI, 0); ctx.lineTo(pro.r, 0); ctx.lineTo(-pro.r, 0);
+        ctx.fillStyle = "rgba(224, 242, 254, 0.85)"; ctx.fill(); ctx.strokeStyle = "#222"; ctx.lineWidth = 2; ctx.stroke();
         
-        let a1 = getInteriorArc(triDemo.v1, triDemo.v2, triDemo.v3);
-        let a2 = getInteriorArc(triDemo.v2, triDemo.v3, triDemo.v1);
-        let a3 = getInteriorArc(triDemo.v3, triDemo.v1, triDemo.v2);
-
-        let t1 = Math.PI, t2 = t1 + a1.sweep, t3 = t2 + a2.sweep;
-        let tx = w / 2, ty = h - 80;
-
-        triDemo.pieces = [
-            { id: 1, x: triDemo.v1.x, y: triDemo.v1.y, rot: 0, start: a1.start, sweep: a1.sweep, targetX: tx, targetY: ty, targetRot: t1 - a1.start, color: "rgba(255, 82, 82, 0.8)", radius: 60, isDragging: false },
-            { id: 2, x: triDemo.v2.x, y: triDemo.v2.y, rot: 0, start: a2.start, sweep: a2.sweep, targetX: tx, targetY: ty, targetRot: t2 - a2.start, color: "rgba(76, 175, 80, 0.8)", radius: 60, isDragging: false },
-            { id: 3, x: triDemo.v3.x, y: triDemo.v3.y, rot: 0, start: a3.start, sweep: a3.sweep, targetX: tx, targetY: ty, targetRot: t3 - a3.start, color: "rgba(33, 150, 243, 0.8)", radius: 60, isDragging: false }
-        ];
-        triDemo.selectedPiece = null;
-
-        updateTriUI();
-        draw();
-    }
-
-    function updateTriUI() {
-        document.getElementById('infoPanel').innerHTML = `
-            <div class="demo-panel">
-                <strong>1. 選擇形狀：</strong><br>
-                <div class="flex-btn-group" style="margin:5px 0;">
-                    <button onclick="setupTriData('acute')" style="border: ${triDemo.type==='acute'?'2px solid #ff6b6b':''}">銳角</button>
-                    <button onclick="setupTriData('right')" style="border: ${triDemo.type==='right'?'2px solid #ff6b6b':''}">直角</button>
-                    <button onclick="setupTriData('obtuse')" style="border: ${triDemo.type==='obtuse'?'2px solid #ff6b6b':''}">鈍角</button>
-                </div>
-                <strong>2. 操作模式：</strong><br>
-                <div class="flex-btn-group" style="margin:5px 0;">
-                    <button onclick="playTriAuto()" style="background:#e3f2fd; color:#1565c0;">▶️ 自動播放</button>
-                    <button onclick="setTriManual()" style="background:#fff3e0; color:#e65100;">🖐️ 自由手動拖曳</button>
-                </div>
-                <div id="manualControls" style="display:${triDemo.mode==='manual'?'block':'none'}; margin-top:10px;">
-                    <label style="font-size:0.9em; color:#d84315;">👉 請點選畫布上的角來拖曳，並拉動下方滑桿旋轉：</label>
-                    <input type="range" id="rotSlider" min="-180" max="180" value="0" oninput="rotateSelected(this.value)">
-                </div>
-            </div>
-        `;
-    }
-
-    function setTriManual() {
-        if(triDemo.animReq) cancelAnimationFrame(triDemo.animReq);
-        triDemo.mode = 'manual';
-        // 將角復原回頂點
-        triDemo.pieces.forEach((p, i) => { p.x = triDemo['v'+(i+1)].x; p.y = triDemo['v'+(i+1)].y; p.rot = 0; });
-        triDemo.selectedPiece = triDemo.pieces[0]; // 預設選取紅角
-        updateTriUI(); document.getElementById('rotSlider').value = 0; draw();
-    }
-
-    function playTriAuto() {
-        if(triDemo.animReq) cancelAnimationFrame(triDemo.animReq);
-        triDemo.mode = 'auto'; triDemo.selectedPiece = null; updateTriUI();
+        ctx.beginPath(); ctx.moveTo(-pro.r, 0); ctx.lineTo(pro.r, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.moveTo(0, -10); ctx.lineTo(0, 0); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fillStyle = "black"; ctx.fill();
         
-        let p = 0;
-        // 初始狀態
-        triDemo.pieces.forEach((pc, i) => { pc.startX = triDemo['v'+(i+1)].x; pc.startY = triDemo['v'+(i+1)].y; pc.startRot = 0; });
-
-        function animate() {
-            p += 0.01;
-            if(p >= 1) { p = 1; document.getElementById('infoPanel').innerHTML += "<br><strong>🎉 自動拼合完成！三者合為 180° 平角。</strong>"; }
-            triDemo.pieces.forEach(pc => {
-                pc.x = pc.startX + (pc.targetX - pc.startX) * p;
-                pc.y = pc.startY + (pc.targetY - pc.startY) * p;
-                pc.rot = pc.startRot + (pc.targetRot - pc.startRot) * p;
-            });
-            draw();
-            if(p < 1) triDemo.animReq = requestAnimationFrame(animate);
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        for (let d = 0; d <= 180; d += 5) {
+            let rad = (d + 180) * Math.PI / 180; let isM = d % 10 === 0; let tl = isM ? 14 : 7;
+            let ox = Math.cos(rad)*pro.r, oy = Math.sin(rad)*pro.r;
+            let ix = Math.cos(rad)*(pro.r-tl), iy = Math.sin(rad)*(pro.r-tl);
+            ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ix, iy); ctx.lineWidth = isM ? 2 : 1; ctx.stroke();
+            if (isM) {
+                // 外圈(黑)
+                ctx.save(); ctx.translate(Math.cos(rad)*(pro.r-25), Math.sin(rad)*(pro.r-25)); ctx.rotate(rad+Math.PI/2);
+                ctx.font = "14px Arial"; ctx.fillStyle = "#222"; ctx.fillText((180-d), 0, 0); ctx.restore();
+                // 內圈(紅)
+                ctx.save(); ctx.translate(Math.cos(rad)*(pro.r-42), Math.sin(rad)*(pro.r-42)); ctx.rotate(rad+Math.PI/2);
+                ctx.font = "12px Arial"; ctx.fillStyle = "#d32f2f"; ctx.fillText(d, 0, 0); ctx.restore();
+            }
         }
-        animate();
+        // 拖曳圈
+        ctx.beginPath(); ctx.arc(0,0,30,Math.PI,0); ctx.fillStyle="rgba(255,255,255,0.5)"; ctx.fill(); ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.restore();
     }
 
-    function getInteriorArc(vCenter, vA, vB) {
-        let a1 = Math.atan2(vA.y - vCenter.y, vA.x - vCenter.x), a2 = Math.atan2(vB.y - vCenter.y, vB.x - vCenter.x);
-        if (a1 < 0) a1 += Math.PI*2; if (a2 < 0) a2 += Math.PI*2;
-        let sweep = a2 - a1;
-        if (sweep < 0) sweep += Math.PI*2;
-        if (sweep > Math.PI) { sweep = Math.PI*2 - sweep; return { start: a2, sweep: sweep }; }
-        return { start: a1, sweep: sweep };
-    }
+    // --- Tab 3 繪製 ---
+    function renderTriangle() {
+        if(!triState.active) return;
+        ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.strokeStyle = "#ccc"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(triState.v1.x, triState.v1.y); ctx.lineTo(triState.v2.x, triState.v2.y); ctx.lineTo(triState.v3.x, triState.v3.y); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-    function rotateSelected(deg) {
-        if(triDemo.selectedPiece) { triDemo.selectedPiece.rot = deg * Math.PI / 180; draw(); }
+        let ty = canvas.height - 80, tx = canvas.width / 2;
+        ctx.beginPath(); ctx.moveTo(tx - 180, ty); ctx.lineTo(tx + 180, ty); ctx.strokeStyle = "#999"; ctx.lineWidth = 4; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI*2); ctx.fillStyle = "black"; ctx.fill();
+        ctx.fillStyle = "#666"; ctx.font = "16px Arial"; ctx.fillText("將三個角拼到這裡", tx - 65, ty + 25);
+
+        triState.pieces.forEach(p => {
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+            if(p === triState.selected) { ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,p.r+8, p.start, p.start+p.sweep); ctx.closePath(); ctx.fillStyle="rgba(255,235,59,0.6)"; ctx.fill(); }
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,p.r, p.start, p.start+p.sweep); ctx.closePath();
+            ctx.fillStyle = p.color; ctx.fill(); ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.restore();
+        });
     }
 
     // ==========================================
-    // 互動事件整合 (手動拼圖 / 量角器 / 畫圖)
+    // 統一事件路由器 (Pointer Events)
     // ==========================================
-    canvas.addEventListener('pointerdown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-
-        // 1. 內角和手動模式判定
-        if(triDemo.active && triDemo.mode === 'manual') {
-            for(let i = triDemo.pieces.length - 1; i >= 0; i--) {
-                let pc = triDemo.pieces[i];
-                let dx = mx - pc.x, dy = my - pc.y;
-                if(Math.hypot(dx, dy) <= pc.radius) {
-                    pc.isDragging = true;
-                    pc.dragOffX = dx; pc.dragOffY = dy;
-                    triDemo.selectedPiece = pc;
-                    document.getElementById('rotSlider').value = Math.round(pc.rot * 180 / Math.PI);
-                    draw(); return;
-                }
-            }
-            return;
-        }
-
-        // 2. 量角器判定
-        if (showProtractor && !triDemo.active) {
-            let dx = mx - protractor.x, dy = my - protractor.y;
-            let cosA = Math.cos(-protractor.angle), sinA = Math.sin(-protractor.angle);
-            let lx = dx * cosA - dy * sinA, ly = dx * sinA + dy * cosA;
-            let dist = Math.hypot(lx, ly);
-
-            if (dist < 30) { protractor.isDragging = true; protractor.dragOffsetX = protractor.x - mx; protractor.dragOffsetY = protractor.y - my; return; } 
-            else if (dist >= 30 && dist <= protractor.radius + 20 && ly <= 20) { protractor.isRotating = true; protractor.startMouseAngle = Math.atan2(dy, dx); protractor.startAngle = protractor.angle; return; }
-        }
-
-        // 3. 一般繪圖
-        if(triDemo.active) return;
-        const cellSize = canvas.width / (gridSize - 1);
-        const p = { x: Math.round(mx/cellSize)*cellSize, y: Math.round(my/cellSize)*cellSize };
-
-        if(currentMode === 'draw') {
-            if(startPoint) { lines.push({start: startPoint, end: p, color: document.getElementById('toolColor').value}); actionHistory.push('line'); startPoint = null; } 
-            else { startPoint = p; }
-        } else if (currentMode === 'fill') {
-            const c = Math.floor(mx/cellSize), r = Math.floor(my/cellSize);
-            if (c < gridSize-1 && r < gridSize-1) {
-                const idx = filledCells.findIndex(cell => cell.c === c && cell.r === r);
-                if (idx > -1) filledCells.splice(idx, 1); else filledCells.push({c, r, color: document.getElementById('toolColor').value});
-                actionHistory.push('fill');
-            }
-        }
-        draw();
-    });
-
     canvas.addEventListener('pointermove', (e) => {
         const rect = canvas.getBoundingClientRect(); mousePos = {x: e.clientX - rect.left, y: e.clientY - rect.top};
-        
-        if(triDemo.active && triDemo.mode === 'manual') {
-            let dragging = triDemo.pieces.find(p => p.isDragging);
-            if(dragging) { dragging.x = mousePos.x - dragging.dragOffX; dragging.y = mousePos.y - dragging.dragOffY; draw(); }
-            return;
-        }
+        if(currentTab === 'angle') handleMoveAngle();
+        if(currentTab === 'triangle') handleMoveTriangle();
+    });
 
-        if (protractor.isDragging) { protractor.x = mousePos.x + protractor.dragOffsetX; protractor.y = mousePos.y + protractor.dragOffsetY; draw(); return; }
-        if (protractor.isRotating) { protractor.angle = protractor.startAngle + (Math.atan2(mousePos.y - protractor.y, mousePos.x - protractor.x) - protractor.startMouseAngle); draw(); return; }
-        if (currentMode === 'draw') draw();
+    let longPressT = null;
+    canvas.addEventListener('pointerdown', (e) => {
+        const rect = canvas.getBoundingClientRect(); mousePos = {x: e.clientX - rect.left, y: e.clientY - rect.top};
+        if(currentTab === 'draw') handleDownDraw();
+        else if(currentTab === 'angle') handleDownAngle();
+        else if(currentTab === 'triangle') handleDownTriangle();
     });
 
     canvas.addEventListener('pointerup', () => { 
-        triDemo.pieces.forEach(p => p.isDragging = false); 
-        protractor.isDragging = false; protractor.isRotating = false; 
+        clearTimeout(longPressT); 
+        angleState.pro.dragging = false; angleState.pro.rotating = false;
+        triState.pieces.forEach(p => p.dragging = false);
     });
-    
-    // ==========================================
-    // 測驗與工具庫 (保留前版精華)
-    // ==========================================
-    function generateAreaQuiz() { clearCanvas(); /* (承襲上版面積出題邏輯，此處簡化示意) */ document.getElementById('infoPanel').innerHTML = "面積出題功能啟動！請手動算算看！"; draw(); }
-    function generateAngleQuiz() { 
-        clearCanvas(); let center = {x: canvas.width/2, y: canvas.height/2}; let rad = (45) * Math.PI / 180;
-        lines.push({start: center, end: {x: center.x+100, y: center.y}}); lines.push({start: center, end: {x: center.x+70, y: center.y-70}});
-        quizData = { type: 'angle', v: center, radStart: 0, radTotal: rad, showSol: false };
-        showProtractor = true; draw();
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    // --- Tab 1 互動 ---
+    function handleDownDraw() {
+        const cs = canvas.width / (drawState.size - 1);
+        const p = { x: Math.round(mousePos.x/cs)*cs, y: Math.round(mousePos.y/cs)*cs };
+        
+        longPressT = setTimeout(() => {
+            if(drawState.mode === 'line') { const n=prompt("輸入點名:","A"); if(n){ drawState.labels.push({x:p.x,y:p.y,text:n}); drawState.history.push('label');} drawState.startPoint=null; }
+        }, 500);
+
+        if(drawState.mode === 'line') {
+            if(drawState.startPoint) { clearTimeout(longPressT); drawState.lines.push({start:drawState.startPoint, end:p, color:document.getElementById('drawColor').value}); drawState.history.push('line'); drawState.startPoint=null; } 
+            else { drawState.startPoint = p; }
+        } else {
+            clearTimeout(longPressT); const c=Math.floor(mousePos.x/cs), r=Math.floor(mousePos.y/cs);
+            if(c<drawState.size-1 && r<drawState.size-1){
+                const idx = drawState.fills.findIndex(f => f.c===c && f.r===r);
+                if(idx>-1) drawState.fills.splice(idx,1); else drawState.fills.push({c,r,color:document.getElementById('drawColor').value});
+                drawState.history.push('fill');
+            }
+        }
     }
-    
-    function toggleProtractor() { showProtractor = !showProtractor; draw(); }
-    function setMode(m) { triDemo.active = false; currentMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); document.getElementById('mode-'+m).classList.add('active'); startPoint = null; draw(); }
-    function clearCanvas() { lines=[]; filledCells=[]; labels=[]; quizData=null; triDemo.active=false; startPoint=null; showProtractor=false; document.getElementById('infoPanel').innerHTML = "已清空。"; draw(); }
-    function undoLastAction() { const a = actionHistory.pop(); if(a==='line') lines.pop(); else if(a==='fill') filledCells.pop(); startPoint=null; draw(); }
-    function calculateShape() { /* 視覺化面積填色與周長提示 */ }
-    function rotateCanvas90() { /* 陣列矩陣旋轉 90度 */ }
-    
-    document.getElementById('gridSize').addEventListener('change', (e) => { gridSize = parseInt(e.target.value); clearCanvas(); init(); });
-    window.onload = init; window.onresize = init;
+
+    // --- Tab 2 互動 ---
+    function handleDownAngle() {
+        let pro = angleState.pro;
+        let dx = mousePos.x - pro.x, dy = mousePos.y - pro.y;
+        let cosA = Math.cos(-pro.angle), sinA = Math.sin(-pro.angle);
+        let lx = dx * cosA - dy * sinA, ly = dx * sinA + dy * cosA;
+        let dist = Math.hypot(lx, ly);
+
+        if (dist < 35) { pro.dragging = true; pro.offX = pro.x - mousePos.x; pro.offY = pro.y - mousePos.y; } 
+        else if (dist >= 35 && dist <= pro.r + 30) { pro.rotating = true; pro.startMAngle = Math.atan2(dy, dx); pro.startAngle = pro.angle; }
+    }
+    function handleMoveAngle() {
+        let pro = angleState.pro;
+        if(pro.dragging) { pro.x = mousePos.x + pro.offX; pro.y = mousePos.y + pro.offY; }
+        if(pro.rotating) { pro.angle = pro.startAngle + (Math.atan2(mousePos.y - pro.y, mousePos.x - pro.x) - pro.startMAngle); }
+    }
+
+    // --- Tab 3 互動 ---
+    function handleDownTriangle() {
+        if(triState.mode !== 'manual') return;
+        for(let i = triState.pieces.length-1; i>=0; i--) {
+            let p = triState.pieces[i];
+            if(Math.hypot(mousePos.x - p.x, mousePos.y - p.y) <= p.r) {
+                p.dragging = true; p.offX = mousePos.x - p.x; p.offY = mousePos.y - p.y;
+                triState.selected = p; document.getElementById('triSlider').value = Math.round(p.rot*180/Math.PI);
+                return;
+            }
+        }
+    }
+    function handleMoveTriangle() {
+        if(triState.mode !== 'manual') return;
+        let drag = triState.pieces.find(p => p.dragging);
+        if(drag) { drag.x = mousePos.x - drag.offX; drag.y = mousePos.y - drag.offY; }
+    }
+
+    // ==========================================
+    // 具體功能實作 
+    // ==========================================
+    // Draw Tab 功能
+    function setDrawMode(m) { drawState.mode = m; document.querySelectorAll('#tab-draw .mode-btn').forEach(b=>b.classList.remove('active')); document.getElementById('draw-mode-'+m).classList.add('active'); drawState.startPoint=null; }
+    function resetDraw() { drawState.size = parseInt(document.getElementById('gridSize').value); drawState.lines=[]; drawState.fills=[]; drawState.labels=[]; drawState.history=[]; drawState.quiz=null; drawState.startPoint=null; document.getElementById('info-draw').innerHTML = "已清空，可自由繪圖。"; }
+    function undoDraw() { const a=drawState.history.pop(); if(a==='line') drawState.lines.pop(); else if(a==='fill') drawState.fills.pop(); else if(a==='label') drawState.labels.pop(); drawState.startPoint=null; }
+    function generateCompositeQuiz() {
+        resetDraw();
+        const cs = canvas.width / (drawState.size-1);
+        let pts = [{x:2,y:2}, {x:5,y:2}, {x:5,y:4}, {x:7,y:4}, {x:7,y:6}, {x:2,y:6}];
+        for(let i=0; i<pts.length; i++) drawState.lines.push({start:{x:pts[i].x*cs, y:pts[i].y*cs}, end:{x:pts[(i+1)%pts.length].x*cs, y:pts[(i+1)%pts.length].y*cs}, color:"#5d4037"});
+        drawState.quiz = { cuts: [{x1:5,y1:4,x2:2,y2:4}], showSol: true };
+        document.getElementById('info-draw').innerHTML = "<strong>💡 複合圖形測驗：</strong><br>畫面上出現了一個 L 型圖形，紅虛線是其中一種切割法。試著使用塗色工具算算看面積！";
+    }
+
+    // Angle Tab 功能
+    function generateAngleQuiz() {
+        angleState.active = true; angleState.sol = false;
+        angleState.deg = 20 + Math.floor(Math.random() * 29) * 5; 
+        angleState.radTotal = angleState.deg * Math.PI / 180;
+        angleState.radStart = (Math.random() * 360) * Math.PI / 180;
+        angleState.v = {x: canvas.width/2 + (Math.random()*40-20), y: canvas.height/2 + (Math.random()*40-20)};
+        
+        angleState.pro.x = canvas.width/2; angleState.pro.y = canvas.height/2; angleState.pro.angle = 0;
+        document.getElementById('info-angle').innerHTML = "<strong>📐 任務：</strong>拖曳量角器中心對準紅點，轉動量角器對齊一邊，測量出角度！";
+    }
+    function showAngleSol() { angleState.sol = true; document.getElementById('info-angle').innerHTML = `<strong>💡 解答：這是 ${angleState.deg}° 喔！</strong>`; }
+
+    // Triangle Tab 功能
+    function getTriArc(vC, vA, vB) {
+        let a1 = Math.atan2(vA.y-vC.y, vA.x-vC.x), a2 = Math.atan2(vB.y-vC.y, vB.x-vC.x);
+        if(a1<0) a1+=Math.PI*2; if(a2<0) a2+=Math.PI*2;
+        let sw = a2-a1; if(sw<0) sw+=Math.PI*2;
+        if(sw>Math.PI) { sw = Math.PI*2-sw; return {st: a2, sw: sw}; } return {st: a1, sw: sw};
+    }
+    function setupTriDemo(type) {
+        triState.active = true; triState.type = type; triState.mode = 'manual';
+        document.getElementById('tri-mode-manual').classList.add('active'); document.getElementById('tri-mode-auto').classList.remove('active');
+        document.getElementById('tri-slider-container').style.display = "block";
+        
+        let w=canvas.width, h=canvas.height;
+        if(type==='acute') { triState.v1={x:w*0.2,y:h*0.6}; triState.v2={x:w*0.8,y:h*0.6}; triState.v3={x:w*0.6,y:h*0.2}; }
+        else if(type==='right') { triState.v1={x:w*0.3,y:h*0.6}; triState.v2={x:w*0.7,y:h*0.6}; triState.v3={x:w*0.3,y:h*0.2}; }
+        else if(type==='obtuse') { triState.v1={x:w*0.2,y:h*0.5}; triState.v2={x:w*0.6,y:h*0.5}; triState.v3={x:w*0.8,y:h*0.2}; }
+        
+        let a1=getTriArc(triState.v1,triState.v2,triState.v3), a2=getTriArc(triState.v2,triState.v3,triState.v1), a3=getTriArc(triState.v3,triState.v1,triState.v2);
+        let t1=Math.PI, t2=t1+a1.sw, t3=t2+a2.sw, tx=w/2, ty=h-80;
+
+        triState.pieces = [
+            { x:triState.v1.x, y:triState.v1.y, rot:0, start:a1.st, sweep:a1.sw, tx:tx, ty:ty, trot:t1-a1.st, color:"rgba(255,82,82,0.85)", r:60, dragging:false, startX:triState.v1.x, startY:triState.v1.y },
+            { x:triState.v2.x, y:triState.v2.y, rot:0, start:a2.st, sweep:a2.sw, tx:tx, ty:ty, trot:t2-a2.st, color:"rgba(76,175,80,0.85)", r:60, dragging:false, startX:triState.v2.x, startY:triState.v2.y },
+            { x:triState.v3.x, y:triState.v3.y, rot:0, start:a3.st, sweep:a3.sw, tx:tx, ty:ty, trot:t3-a3.st, color:"rgba(33,150,243,0.85)", r:60, dragging:false, startX:triState.v3.x, startY:triState.v3.y }
+        ];
+        triState.selected = triState.pieces[0]; document.getElementById('triSlider').value = 0;
+        document.getElementById('info-triangle').innerHTML = `<strong>👇 自由拖曳模式：</strong><br>用手指或滑鼠把彩色的角拉到下面底線上，並滑動上方拉桿旋轉！`;
+    }
+    function setTriMode(m) {
+        triState.mode = m; document.querySelectorAll('#tab-triangle .mode-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tri-mode-'+m).classList.add('active');
+        if(m==='manual') { setupTriDemo(triState.type); }
+        else {
+            document.getElementById('tri-slider-container').style.display = "none"; triState.selected = null;
+            triState.pieces.forEach(p=>{ p.x=p.startX; p.y=p.startY; p.rot=0; });
+            let p=0;
+            function anim(){ p+=0.015; if(p>=1){p=1; document.getElementById('info-triangle').innerHTML="<strong>🎉 自動拼合完成！180°！</strong>";} 
+                triState.pieces.forEach(pc=>{ pc.x=pc.startX+(pc.tx-pc.startX)*p; pc.y=pc.startY+(pc.ty-pc.startY)*p; pc.rot=pc.trot*p; });
+                if(p<1) requestAnimationFrame(anim);
+            } anim();
+        }
+    }
+    function rotateSelectedTri(v) { if(triState.selected) triState.selected.rot = v*Math.PI/180; }
+
 </script>
 </body>
 </html>
